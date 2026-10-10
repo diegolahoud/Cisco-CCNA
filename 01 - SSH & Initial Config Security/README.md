@@ -4,8 +4,8 @@
 This lab focuses on fundamental initial configurations for Cisco routers and switches. The primary objective is to harden device management, securing both physical console access and remote administration using encrypted protocols.
 
 ## Objectives
-- **Device Identification:** Assign unique hostnames to clearly identify devices across the network topology.
-- **Console Line Security:** Configure password protection and local user authentication on the physical console line to restrict physical access.
+- **Device Identification & Usability:** Assign unique hostnames and disable DNS lookups to prevent CLI freezing on mistyped commands.
+- **Console Line Security:** Configure password protection, inactivity timeouts, and local user authentication on the physical console line.
 - **Password Encryption:** Enable global password encryption (`service password-encryption`) and secure Privileged EXEC mode using encrypted secrets (`enable secret`).
 - **Secure Remote Access (SSH):** Configure domain names, RSA key pairs, and SSH on Virtual Terminal (VTY) lines to ensure remote management traffic is encrypted and Telnet is disabled.
 - **Banner Configuration:** Implement a Message of the Day (MOTD) banner to display legal warnings to unauthorized users.
@@ -25,23 +25,26 @@ This lab focuses on fundamental initial configurations for Cisco routers and swi
 2. Connect a **Copper Straight-Through** cable from the PC's `FastEthernet0` port to `FastEthernet0/1` on **SW1**.
 3. On **PC0**, open the **Desktop** tab, launch **Terminal**, leave the default serial settings (9600 baud, 8 data bits, no parity, 1 stop bit, no flow control), and click **OK** to enter the switch CLI.
 
-### Step 2: Configure Device Hostname
-Enter Global Configuration Mode and assign a hostname to the switch:
+### Step 2: Configure Device Hostname & Disable DNS Lookup
+Enter Global Configuration Mode, set the switch hostname, and disable automatic domain lookups so mistyped commands do not cause the CLI to hang:
 
 ```cisco
 Switch> enable
 Switch# configure terminal
 Switch(config)# hostname SW1
+SW1(config)# no ip domain-lookup
 SW1(config)# do write memory
 ```
 
 ### Step 3: Secure Physical Console Access
-Configure password protection on the physical console line to restrict local access:
+Configure password protection, console message sync, and a 10-minute inactivity logout on the physical console line:
 
 ```cisco
 SW1(config)# line console 0
 SW1(config-line)# password lab1
 SW1(config-line)# login
+SW1(config-line)# logging synchronous
+SW1(config-line)# exec-timeout 10 0
 SW1(config-line)# end
 SW1# write memory
 ```
@@ -85,6 +88,8 @@ SW1(config)# username admin secret lab1-ssh
 SW1(config)# line vty 0 15
 SW1(config-line)# transport input ssh
 SW1(config-line)# login local
+SW1(config-line)# logging synchronous
+SW1(config-line)# exec-timeout 10 0
 SW1(config-line)# end
 SW1# write memory
 ```
@@ -118,3 +123,14 @@ SW1# write memory
 ssh -l admin 192.168.1.2
 ```
 Enter password `lab1-ssh` when prompted to verify successful remote access.
+
+### Step 8: Configure Message of the Day (MOTD) Banner
+Configure a legal warning banner to display whenever an unauthorized user attempts to establish a console or SSH session:
+
+```cisco
+SW1# configure terminal
+SW1(config)# banner motd # AUTHORIZED ACCESS ONLY! Unauthorized access is strictly prohibited. #
+SW1(config)# end
+SW1# write memory
+```
+*Verification:* Log out of the switch session (`exit`). Reconnect via terminal or SSH to verify that the banner text appears above the authentication prompt.
