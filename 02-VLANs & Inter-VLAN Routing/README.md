@@ -13,13 +13,13 @@ This lab demonstrates two fundamental methods for implementing Inter-VLAN routin
 
 | Device | Interface / Subinterface | VLAN | IP Address | Subnet Mask | Default Gateway |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Router0** | Gi0/0.10 | 10 (HR) | 192.168.0.1 | 255.255.255.0 | N/A |
-| **Router0** | Gi0/0.20 | 20 (Finance) | 192.168.1.1 | 255.255.255.0 | N/A |
-| **Router0** | Gi0/0.99 | 99 (IT) | 192.168.2.1 | 255.255.255.0 | N/A |
-| **PC0** | Fa0 | 10 (HR) | 192.168.0.3 | 255.255.255.0 | 192.168.0.1 |
-| **PC1** | Fa0 | 10 (HR) | 192.168.0.4 | 255.255.255.0 | 192.168.0.1 |
-| **PC2** | Fa0 | 20 (Finance) | 192.168.1.3 | 255.255.255.0 | 192.168.1.1 |
-| **Server0** | Fa0 | 99 (IT) | 192.168.2.3 | 255.255.255.0 | 192.168.2.1 |
+| **RS-CAMPUSA-1** | Gi0/0.10 | 10 (HR) | 192.168.0.1 | 255.255.255.0 | N/A |
+| **RS-CAMPUSA-1** | Gi0/0.20 | 20 (Finance) | 192.168.1.1 | 255.255.255.0 | N/A |
+| **RS-CAMPUSA-1** | Gi0/0.99 | 99 (IT) | 192.168.2.1 | 255.255.255.0 | N/A |
+| **PC0** | Fa0 | 10 (HR) | 192.168.0.10 | 255.255.255.0 | 192.168.0.1 |
+| **PC1** | Fa0 | 10 (HR) | 192.168.0.11 | 255.255.255.0 | 192.168.0.1 |
+| **PC2** | Fa0 | 20 (Finance) | 192.168.1.10 | 255.255.255.0 | 192.168.1.1 |
+| **Server0** | Fa0 | 99 (IT) | 192.168.2.10 | 255.255.255.0 | 192.168.2.1 |
 
 ### Campus B: Multilayer Switching (Layer 3)
 
@@ -40,18 +40,75 @@ This lab demonstrates two fundamental methods for implementing Inter-VLAN routin
 ### Campus A Configuration (Router-on-a-Stick)
 
 #### Step 1: Configure Layer 2 Switch (`SWI-CAMPUSA-1`)
-Create VLANs, assign access ports, and configure the trunk port to Router0:
+Create VLANs, assign access ports, and configure the trunk port to `RS-CAMPUSA-1`:
 
 ```cisco
-Add commands
+! Create VLAN 10 & Assign Access Ports
+SWI-CAMPUSA-1> enable
+SWI-CAMPUSA-1# configure terminal
+SWI-CAMPUSA-1(config)# interface range FastEthernet0/1 - 2
+SWI-CAMPUSA-1(config-if-range)# switchport mode access
+SWI-CAMPUSA-1(config-if-range)# switchport access vlan 10
+SWI-CAMPUSA-1(config-if-range)# exit
+SWI-CAMPUSA-1(config)# vlan 10
+SWI-CAMPUSA-1(config-vlan)# name HR
+SWI-CAMPUSA-1(config-vlan)# exit
+```
+> **Note:** The `interface range` command modifies multiple switch ports simultaneously (in this case, `Fa0/1` and `Fa0/2`).
+
+```cisco
+! Create VLAN 20 & Assign Access Port
+SWI-CAMPUSA-1(config)# interface FastEthernet0/3
+SWI-CAMPUSA-1(config-if)# switchport mode access
+SWI-CAMPUSA-1(config-if)# switchport access vlan 20
+SWI-CAMPUSA-1(config-if)# exit
+SWI-CAMPUSA-1(config)# vlan 20
+SWI-CAMPUSA-1(config-vlan)# name Finance
+SWI-CAMPUSA-1(config-vlan)# exit
+
+! Create VLAN 99 & Assign Access Port
+SWI-CAMPUSA-1(config)# interface FastEthernet0/4
+SWI-CAMPUSA-1(config-if)# switchport mode access
+SWI-CAMPUSA-1(config-if)# switchport access vlan 99
+SWI-CAMPUSA-1(config-if)# exit
+SWI-CAMPUSA-1(config)# vlan 99
+SWI-CAMPUSA-1(config-vlan)# name IT
+SWI-CAMPUSA-1(config-vlan)# exit
+
+! Configure Trunk Port to RS-CAMPUSA-1
+SWI-CAMPUSA-1(config)# interface FastEthernet0/5
+SWI-CAMPUSA-1(config-if)# switchport mode trunk
+SWI-CAMPUSA-1(config-if)# end
+SWI-CAMPUSA-1# write memory
 ```
 
-#### Step 2: Configure Router Subinterfaces (`Router0`)
+#### Step 2: Configure Router Subinterfaces (`RS-CAMPUSA-1`)
 Configure 802.1Q subinterfaces on the router physical interface to perform Inter-VLAN routing:
 
 ```cisco
-Add commands
+! Activate physical interface connected to SWI-CAMPUSA-1
+RS-CAMPUSA-1> enable
+RS-CAMPUSA-1# configure terminal
+RS-CAMPUSA-1(config)# interface GigabitEthernet0/0
+RS-CAMPUSA-1(config-if)# no shutdown
+
+! Configure 802.1Q encapsulation on subinterfaces
+RS-CAMPUSA-1(config)# interface GigabitEthernet0/0.10
+RS-CAMPUSA-1(config-subif)# encapsulation dot1q 10
+RS-CAMPUSA-1(config-subif)# ip address 192.168.0.1 255.255.255.0
+
+RS-CAMPUSA-1(config)# interface GigabitEthernet0/0.20
+RS-CAMPUSA-1(config-subif)# encapsulation dot1q 20
+RS-CAMPUSA-1(config-subif)# ip address 192.168.1.1 255.255.255.0
+
+RS-CAMPUSA-1(config)# interface GigabitEthernet0/0.99
+RS-CAMPUSA-1(config-subif)# encapsulation dot1q 99
+RS-CAMPUSA-1(config-subif)# ip address 192.168.2.1 255.255.255.0
+RS-CAMPUSA-1(config-subif)# end
+RS-CAMPUSA-1# write memory
 ```
+
+> **Note:** Ensure each PC/Server has its Default Gateway pointed to its respective subinterface IP (e.g., `192.168.0.1` for PC0) so end devices can route traffic across VLANs.
 
 ---
 
@@ -61,14 +118,14 @@ Add commands
 Enable IP routing, create VLANs, configure SVIs for gateway routing, and setup the inter-switch trunk link:
 
 ```cisco
-Add commands
+! TODO: Add commands for MLS-CAMPUSB-1 (vlan creation, access ports, SVIs 30/40/55, ip routing, and trunk link)
 ```
 
 #### Step 4: Configure Secondary Multilayer Switch (`MLS-CAMPUSB-2`)
 Configure matching VLANs, assign access ports, and enable trunking back to `MLS-CAMPUSB-1`:
 
 ```cisco
-Add commands
+! TODO: Add commands for MLS-CAMPUSB-2 (vlan creation, access ports, and trunk link)
 ```
 
 ---
@@ -80,7 +137,7 @@ Add commands
 2. **Verify Trunking Status:**
    Run `show interfaces trunk` on `SWI-CAMPUSA-1`, `MLS-CAMPUSB-1`, and `MLS-CAMPUSB-2` to confirm 802.1Q trunking is operational.
 3. **Verify Routing Tables:**
-   Run `show ip route` on `Router0` and `MLS-CAMPUSB-1` to confirm connected subnets are present.
+   Run `show ip route` on `RS-CAMPUSA-1` and `MLS-CAMPUSB-1` to confirm connected subnets are present.
 4. **Test End-to-End Inter-VLAN Reachability:**
-   - **Campus A:** From PC0 (`192.168.0.3`), ping PC2 (`192.168.1.3`) and Server0 (`192.168.2.3`).
+   - **Campus A:** From PC0 (`192.168.0.10`), ping PC2 (`192.168.1.10`) and Server0 (`192.168.2.10`).
    - **Campus B:** From PC3 (`10.0.0.10`), ping PC5 (`10.1.0.10`) and PC6 (`10.2.0.10`).
