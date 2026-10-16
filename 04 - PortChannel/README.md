@@ -71,16 +71,16 @@ MSLB-1(config)#shutdown
 ```
 **Note:** We turn off the links so we do not get an error while we are configuring the ports. Make sure you turn off the ports from gig1/0/5 to 8 in MSLB-2 as well
 
-'''cisco
+```cisco
 MSLB-1(config-if-range)#channel-group 7 mode desirable
 MSLB-1(config-if-range)#int po7
 MSLB-1(config-if)#switchport mode trunk
 MSLB-1(config-if)# no shutdown
-'''
+```
 
 **Note:** The Etherchannel is not created yet as we need to configure the same settings on the switch ports, on MLSB-2. Remember the links should be shutdown from the previous step. Moreover, any modification that you do in the interface PortChannel itself, it will modified the settings in all the physical ports members of the EtherChannel
 
-'''cisco
+```cisco
 MSLB-1(config) int range gig1/0/5 - 8
 MSLB-1(config-if-range)#channel-group 7 mode desirable
 MSLB-1(config-if-range)#int po7
@@ -90,7 +90,7 @@ MSLB-1(config-if)#exit
 MSLB-1(config)#do sh wri mem
 MSLB-1(config)#do wri mem
 MSLB-1(config)# do etherchannel sum
-'''
+```
 
 **Note1:** You will see that the links are now all green, this is because the EtherChannel is considered as one virtual port, and STP do not need to make the blocking port in each individual physical port, they are all acting like one. You you can ping from the PCB to ServerB, and the trunking EtherChannel will send the traffic. 
 
