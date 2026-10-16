@@ -65,19 +65,6 @@ Convert interface range `Gig1/0/1 - 4` to Layer 3 (`no switchport`), assign to `
 
 **Notes:** Before starting, review that all the port settings are the same. For this lab, VLAN 4 (HR) was already created in MLSB-1 and MLSB-2. Also, verified the speed, duplex, allowed vlans, etc. 
 
-'''cisco
-MLSB-1(config-if)#do sh vlan bri
-
-VLAN Name                             Status    Ports
----- -------------------------------- --------- -------------------------------
-1    default                          active    Gig1/0/1, Gig1/0/2, Gig1/0/3, Gig1/0/4
-                                                Gig1/0/9, Gig1/0/10, Gig1/0/11, Gig1/0/12
-                                                Gig1/0/13, Gig1/0/14, Gig1/0/15, Gig1/0/16
-                                                Gig1/0/17, Gig1/0/18, Gig1/0/19, Gig1/0/20
-                                                Gig1/0/21, Gig1/0/22, Gig1/0/24, Gig1/1/1
-                                                Gig1/1/2, Gig1/1/3, Gig1/1/4
-4    HR                               active    Gig1/0/23
-'''
 ```cisco
 MSLB-1(config)#int range gig1/0/5 -8
 MSLB-1(config)#shutdown 
