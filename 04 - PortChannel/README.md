@@ -34,10 +34,10 @@ This lab compares two distinct EtherChannel deployment models across two campuse
 
 | Device | Interface | Remote Device | Remote Interface | IP Address | Subnet Mask | Default Gateway |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **PCA** | Gig0 | MLSA-1 | Gig1/0/24 | 192.168.0.10 | 255.255.255.0 | 192.168.0.1 |
+| **PCA** | Gig0 | MLSA-1 | Gig1/0/24 | 192.168.0.10 | 255.255.255.0 | 192.168.0.1 | VLAN 10 (Marketing)
 | **MLSA-1** | Gig1/0/1 - 4 | MLSA-2 | Gig1/0/1 - 4 | PortChannel 4 | N/A | N/A |
 | **MLSA-2** | Gig1/0/24 | ServerA | Gig0 | N/A (Access) | N/A | N/A |
-| **ServerA** | Gig0 | MLSA-2 | Gig1/0/24 | 192.168.1.10 | 255.255.255.0 | 192.168.1.1 |
+| **ServerA** | Gig0 | MLSA-2 | Gig1/0/24 | 192.168.1.10 | 255.255.255.0 | 192.168.1.1 | VLAN 11 (Admins)
 
 ### Campus B: Layer 2 PortChannel
 
@@ -55,11 +55,37 @@ This lab compares two distinct EtherChannel deployment models across two campuse
 ### Campus A Configuration (Layer 3 PortChannel)
 
 #### Step 1: Configure Layer 3 EtherChannel on `MLSA-1` & `MLSA-2`
-Convert interface range `Gig1/0/1 - 4` to Layer 3 (`no switchport`), assign to `channel-group 4 mode active` (LACP), configure the routed IP on `interface Port-channel 4`, and enable `ip routing`.
+Convert interface range `Gig1/0/1 - 4` to Layer 3 (`no switchport`), assign to `channel-group 4 mode desirable` (PAgP), configure the routed IP on `interface Port-channel 4`, and enable `ip routing`.
+
+**Notes:** MLSA-1 and MLSA-2 already have the VLANs created, and the access port were already selected for the PCA and ServerA. Moreover, the vlan interface IP was already set up with the Default Gateway. For the steps, follow the VLAN lab on how to create a vlan interface, and add an IP
 
 ```cisco
-! TODO: Insert MLSA-1 Layer 3 PortChannel commands here
+! These commands are for MLSA-1
+MLSA-1>Enable
+MLSA-1#Configure terminal
+MLSA-1(config)#ip routing
+MLSA-1(config)#int range gig1/0/1 - 4
+MLSA-1(config-if-range)# no switchport
+MLSA-1(config-if-range)#channel-group 4 mode desirable
+MLSA-1(config-if-range)#int po4
+MLSA-1(config-if)#ip add 192.168.2.1 255.255.255.0
+MLSA-1(config-if)#exit
+MLSA-1(config)#ip route 192.168.1.0 255.255.255.0 192.168.2.2
+
+! These commands are for MLSA-2
+MLSA-2>Enable
+MLSA-2#Configure terminal
+MLSA-2(config)#ip routing
+MLSA-2(config)#int range gig1/0/1 - 4
+MLSA-2(config-if-range)# no switchport
+MLSA-2(config-if-range)#channel-group 4 mode desirable
+MLSA-2(config-if-range)#int po4
+MLSA-2(config-if)#ip add 192.168.2.2 255.255.255.0
+MLSA-2(config-if)#exit
+MLSA-2(config)#ip route 192.168.0.0 255.255.255.0 192.168.2.1
 ```
+
+**Notes:** To troubleshoot the PortChannels you can use the command 'show etherchannel summary' so you can review the PortChannel settings. In this lab, MLSA-2 was running in Layer 2 despite the no switchport. To fix it, you need to shutdown the physical interfaces, and remove the PortChannel by doing the command "no int po4", and re do it again. 
 
 ### Campus B Configuration (Layer 2 PortChannel)
 
