@@ -1,4 +1,4 @@
-# cisco-packet-tracer-labs
+# Cisco CCNA - Packet Tracer Labs
 
 # Cisco CCNA - Packet Tracer Networking Labs
 
