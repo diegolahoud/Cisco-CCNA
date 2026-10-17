@@ -1,6 +1,6 @@
 # cisco-packet-tracer-labs
 
-# Cisco Packet Tracer Networking Labs
+# Cisco CCNA - Packet Tracer Networking Labs
 
 ## Overview
 The purpose of this repository is to put into practice networking concepts learned in class through hands-on Cisco Packet Tracer labs. Each lab is individually developed, provisioned, and documented with a focus on a specific weekly topic.
