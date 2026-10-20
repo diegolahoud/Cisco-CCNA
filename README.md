@@ -9,8 +9,8 @@ The purpose of this repository is to put into practice networking concepts learn
 
 ## Repository Roadmap
 
-1. **[01 - SSH & Initial Config Security](./SSH & Initial Config Security)** – SSH & Initial Device Security
-2. **[02-vlans-intervlan](./02-vlans-intervlan)** – VLANs and Inter-VLAN Routing
+1. **[01-SSH&Initial-Config-Security](./SSH&Initial-Config-Security)** – SSH & Initial Device Security
+2. **[02-VLANs&Inter-VLAN-Routing](./02-VLANs&Inter-VLAN-Routing)** – VLANs and Inter-VLAN Routing
 3. **[03-stp](./03-stp)** – Spanning Tree Protocol (STP)
 4. **[04-etherchannel](./04-etherchannel)** – EtherChannel Link Aggregation
 5. **[05-dhcpv4](./05-dhcpv4)** – Dynamic Host Configuration Protocol (DHCPv4)
