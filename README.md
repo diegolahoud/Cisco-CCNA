@@ -11,8 +11,8 @@ The purpose of this repository is to put into practice networking concepts learn
 
 1. **[01-SSH&Initial-Config-Security](./01-SSH&Initial-Config-Security)** – SSH & Initial Device Security
 2. **[02-VLANs&Inter-VLAN-Routing](./02-VLANs&Inter-VLAN-Routing)** – VLANs and Inter-VLAN Routing
-3. **[03-stp](./03-stp)** – Spanning Tree Protocol (STP)
-4. **[04-etherchannel](./04-etherchannel)** – EtherChannel Link Aggregation
+3. **[03-STP](./03-STP)** – Spanning Tree Protocol (STP)
+4. **[04-PortChannel](./04-PortChannell)** – EtherChannel Link Aggregation
 5. **[05-dhcpv4](./05-dhcpv4)** – Dynamic Host Configuration Protocol (DHCPv4)
 6. **[06-dhcpv6-slaac](./06-dhcpv6-slaac)** – SLAAC and DHCPv6
 7. **[07-fhrp](./07-fhrp)** – First Hop Redundancy Protocols (FHRP)
