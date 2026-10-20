@@ -9,7 +9,7 @@ The purpose of this repository is to put into practice networking concepts learn
 
 ## Repository Roadmap
 
-1. **[01-SSH&Initial-Config-Security](.01-SSH&Initial-Config-Security)** – SSH & Initial Device Security
+1. **[01-SSH&Initial-Config-Security](./01-SSH&Initial-Config-Security)** – SSH & Initial Device Security
 2. **[02-VLANs&Inter-VLAN-Routing](./02-VLANs&Inter-VLAN-Routing)** – VLANs and Inter-VLAN Routing
 3. **[03-stp](./03-stp)** – Spanning Tree Protocol (STP)
 4. **[04-etherchannel](./04-etherchannel)** – EtherChannel Link Aggregation
