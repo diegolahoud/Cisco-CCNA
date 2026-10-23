@@ -22,6 +22,7 @@ The purpose of this repository is to put into practice networking concepts learn
 11. **[11-routing](./11-routing)** – Fundamentals of Routing
 12. **[12-static-routing](./12-static-routing)** – IP Static Routing
 13. **[13-troubleshooting-routes](./13-troubleshooting-routes)** – Troubleshooting Static and Default Routes
+14. **[Mega-Labs](./14-Mega-Labs)** - Mega Labs with Packet Tracer.
 
 ---
 
