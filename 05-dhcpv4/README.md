@@ -98,13 +98,8 @@ R2(config)# do write memory
 
 ### Step 4: Configure static routes between R1 and R2
 
-! This is for R2
-```cisco
-R2(config)# ip route 10.0.0.0 255.0.0.0 30.0.0.2
-R2(config)# ip route 20.0.0.0 255.0.0.0 30.0.0.2
-```
 
-! This is for RR
+! This is for R1
 ```cisco
 R1(config)# ip route 10.0.0.0 255.0.0.0 30.0.0.1
 R1(config)# ip route 20.0.0.0 255.0.0.0 30.0.0.1
@@ -113,3 +108,9 @@ R1(config)# ip route 20.0.0.0 255.0.0.0 30.0.0.1
 ## Step 5: Test the DHCP server is handling the IP to the devices
 
 You need to switch the PC from static IP to DHCP, and click on the forward buttom to accelerate the process. If succesful, the desktop should have a received an IP above the 100.
+
+```cisco
+R1(config)# do sh ip dhcp bi
+```
+
+This will display the IP address assigned to the MAC address of the device, and the lease expiration
