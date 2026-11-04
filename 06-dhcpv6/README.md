@@ -49,110 +49,79 @@ When creating a 64-bit Host ID for SLAAC, end devices use one of two methods:
 
 ## Topology & Addressing Table
 
-| Device | Interface | IPv6 Subnet | Default Gateway | Link-Local Address (LLA) | Configuration Mode |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **R1** | G0/1 | `2001:db8:acad:10::1/64` | N/A | Auto-assigned via `ipv6 enable` | SLAAC Gateway 
-| **R2** | G0/1 | `2001:db8:acad:20::1/64` | N/A | Auto-assigned via `ipv6 enable` | Stateless DHCPv6 Gateway 
-| **R3** | G0/1 | `2001:db8:acad:30::1/64` | N/A | Auto-assigned via `ipv6 enable` | Stateful DHCPv6 Gateway 
-| **PC1-SLAAC** | Fa0 | SLAAC (`2001:db8:acad:10::/64`) | Router LLA (via RA) | Auto (EUI-64 / Random) | SLAAC Only 
-| **PC2-STATELESS** | Fa0 | SLAAC + DHCPv6 DNS | Router LLA (via RA) | Auto (EUI-64 / Random) | Stateless DHCPv6 
-| **PC3-STATEFUL** | Fa0 | Stateful DHCPv6 Lease | Router LLA (via RA) | Auto (EUI-64 / Random) | Stateful DHCPv6 
+| Device | Interface | IPv6 Subnet | Default Gateway (Router Interface IP) | Configuration Mode |
+| :--- | :--- | :--- | :--- | :--- |
+| **R1** | G0/1 | `2001:db8:acad:10::/64` | `2001:db8:acad:10::1/64` | SLAAC Gateway |
+| **R2** | G0/1 | `2001:db8:acad:20::/64` | `2001:db8:acad:20::1/64` | Stateless DHCPv6 Gateway |
+| **R3** | G0/1 | `2001:db8:acad:30::/64` | `2001:db8:acad:30::1/64` | Stateful DHCPv6 Gateway |
+| **PC1-SLAAC** | Fa0 | `2001:db8:acad:10::/64` | `2001:db8:acad:10::1/64` | SLAAC Only |
+| **PC2-STATELESS** | Fa0 | `2001:db8:acad:20::/64` | `2001:db8:acad:20::1/64` | Stateless DHCPv6 |
+| **PC3-STATEFUL** | Fa0 | `2001:db8:acad:30::/64` | `2001:db8:acad:30::1/64` | Stateful DHCPv6 |
+
 
 ---
 
+### Step 1: LAN 1 – SLAAC Only Configuration (`R1`)
+
+Configure `R1` to act as a SLAAC-only gateway. Enabling `ipv6 unicast-routing` allows `R1` to transmit periodic ICMPv6 Router Advertisements (RAs) out of interface `G0/1`.
+
+```cisco
+R1(config)# ipv6 unicast-routing 
+R1(config)# interface GigabitEthernet0/1
+R1(config-if)# ipv6 enable 
+R1(config-if)# ipv6 address 2001:db8:acad:10::1/64
+R1(config-if)# no shutdown
+```
+
+**Notes:** This configuration enables *A=1* (Autonomous Address Autoconfiguration) in the ICMPv6 Router Advertisements while leaving *O=0* (Other Configuration) and *M=0* (Managed Address Configuration) by default. Hosts generate their own 64-bit Interface ID using SLAAC and use *2001:db8:acad:10::/64* as their prefix. The ipv6 unicast-routing command enables RAs, and assigning the IPv6 on the interface prepares the prefix to be advertised. The host will auto-create its own LLA as soon as it is powered on.
 
 
+### Step 2: LAN 2 – Stateless DHCPv6 Configuration (`R2`)
+
+Configure `R2` to act as a Stateless DHCPv6 gateway. Enabling `ipv6 unicast-routing` allows `R2` to transmit periodic ICMPv6 Router Advertisements (RAs) out of interface `G0/1`. In this configuration, the end host receives instructions from the router's RA to autoconfigure its own Global Unicast Address (GUA), but contacts the DHCPv6 server to obtain additional parameters, such as DNS server IP addresses and domain names.
+
+```cisco
+R2(config)# ipv6 unicast-routing 
+R2(config)# ipv6 dhcp pool LAN2
+R2(config-dhcpv6)# dns-server 2001:4860:4860::8888
+R2(config-dhcpv6)# domain-name example.com
+R2(config-dhcpv6)# exit
+R2(config)# interface GigabitEthernet0/1
+R2(config-if)# ipv6 enable
+R2(config-if)# ipv6 address 2001:db8:acad:20::1/64
+R2(config-if)# ipv6 dhcp server LAN2
+R2(config-if)# ipv6 nd other-config-flag
+R2(config-if)# no shutdown
+```
+
+**Notes:** These steps are similar to the SLAAC-only configuration, with the main difference being the creation of an IPv6 DHCP pool named **LAN2** containing network information (such as DNS and domain name). After binding the pool to the interface using **ipv6 dhcp server LAN2** and configuring interface IP **2001:db8:acad:20::1/64**, the **ipv6 nd other-config-flag** command changes the O flag from *0* to *1*. This results in the flag state A=1, O=1, M=0, instructing hosts to perform SLAAC for address creation while querying the DHCPv6 server for additional parameters.
+
+### Step 3: LAN 3 – Stateful DHCPv6 Configuration (`R3`)
+
+Configure `R3` to act as a Stateful DHCPv6. Enabling `ipv6 unicast-routing` allows `R3` to transmit periodic ICMPv6 Router Advertisements (RAs) out of interface `G0/1`. In this configuration, the end host receives the information from the router's RA to go look for information like the Global Unicast Address (GUA), DNS server, domain name, etc. to the DHCPv6 server. This is the most similar option like DHCPv4 server
+
+```cisco
+R3(config)#ipv6 unicast-routing 
+R3(config)#ipv6 dhcp pool TEST3
+R3(config-dhcpv6)#address prefix 2001:db8:acad:30::/64
+R3(config-dhcpv6)#dns-server 2001:DB8:1234::53
+R3(config-dhcpv6)#domain-name example.com
+R3(config-dhcpv6)#exit
+R3(config)#int gig0/1
+R3(config-if)#ipv6 address 2001:db8:acad:30::1/64
+R3(config-if)#ipv6 dhcp server TEST3
+R3(config-if)#ipv6 nd managed-config-flag 
+R3(config-if)#no shutdown 
+```
+
+**Notes:** The command `ipv6 nd managed-config-flag` helps us change the M flag from *0* to *1* so the end host knows that it needs to contact the Cisco Router for its GUA address. In a real Cisco router, you will need to run the command  `ipv6 nd prefix default no-autoconfig`so we change the A flag from 1 to 0 (to turn off SLAAC completly).We are unable to perfom the last command in Cisco Packet Tracer.
 
 
-=====================
+### Step 4. Verify the IPv6 address information
 
+1. Run the command `sh ipv6 int bri` to verify the IPv6 address on the interface, you should have an LLA (default gateway) and GUA address.
 
+2. Run the command `sh ipv6 int gig0/1`, and it will show detailed IPv6 settings, status, and enabled features on a specific interface. For example, in `R3` it will say: "Hosts use DHCP to obtain routable addresses." And `R2` "  Hosts use stateless autoconfig for addresses.
+  Hosts use DHCP to obtain other configuration."
 
-
-1) For SLAAC only:
-
-Router(config)#ipv6 uni
-Router(config)#ipv6 unicast-routing 
-Router(config)#int gig0/1
-Router(config-if)#ipv6 e
-Router(config-if)#ipv6 en
-Router(config-if)#ipv6 enable 
-Router(config-if)#ipv
-Router(config-if)#ipv6 add 2001:db8:acad:1::1/64
-Router(config-if)#no sh
-Router(config-if)#no shutdown 
-
-Router(config-if)#
-%LINK-5-CHANGED: Interface GigabitEthernet0/1, changed state to up
-
-%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up
-
-Router(config-if)#
-Router#
-%SYS-5-CONFIG_I: Configured from console by console
-
-
-
-to add dns in SLAAC only: 
-
-Router(config)# interface GigabitEthernet0/1
-Router(config-if)# ipv6 nd ra dns server 2001:4860:4860::8888
-
-
-2) DHCP Stateless
-
-Router(config)#ipv6 uni
-Router(config)#ipv6 unicast-routing 
-Router(config)#ipv6 dhc
-Router(config)#ipv6 dhcp po
-Router(config)#ipv6 dhcp pool TEST-1
-Router(config-dhcpv6)#dns
-Router(config-dhcpv6)#dns-server 2001:4860:4860::8888
-Router(config-dhcpv6)#dom
-Router(config-dhcpv6)#domain-name example.com
-Router(config-dhcpv6)#int gig0/1
-Router(config-if)#ipv
-Router(config-if)#ipv6 dh
-Router(config-if)#ipv6 dhcp se
-Router(config-if)#ipv6 dhcp server TE
-Router(config-if)#ipv6 dhcp server TES
-Router(config-if)#ipv6 dhcp server TEST-1
-Router(config-if)#
-Router(config-if)#ipv6 dhcp server TEST-1
-Router(config-if)#ipv6 dhcp pool TEST-1
-Router(config-dhcpv6)#ip p
-Router(config-dhcpv6)#ipv6 p
-Router(config-dhcpv6)#ipv6 pe
-Router(config-dhcpv6)#ipv6 pre
-Router(config-dhcpv6)#ipv6 pre?
-% Unrecognized command
-Router(config-dhcpv6)#add
-Router(config-dhcpv6)#address pre
-Router(config-dhcpv6)#address prefix 2001:db8:acad:2::/64
-Router(config-dhcpv6)#int gig0/1
-Router(config-if)#ipv
-Router(config-if)#ipv6 add 2001:db8:acad:2::1/64
-
-Type this as well: ipv6 nd other-config-flag
-
-You had to make both of these changes to shift the router's behavior from being a controlling "Stateful" server to a hands-off "Stateless" one.
-
-Here is exactly what each command did behind the scenes:
-
-1. Why you removed address prefix (Stopping Stateful Behavior)
-When the address prefix and lifetime commands are inside the pool, the router acts as a Stateful DHCPv6 server. It tries to act like a strict manager: assigning specific IPs, tracking which PC has which IP, and watching the clock to see when their lease expires.
-
-By removing that command, you stripped the router of its IP-management duties. You turned the pool into a Stateless information booth that says, "I don't hand out IP addresses or track timers anymore. I just hand out the DNS server and domain name if anyone asks."
-
-2. Why you added ipv6 nd other-config-flag (The "Go get DNS" instruction)
-When a PC connects to your network, the router automatically sends it a beacon called a Router Advertisement (RA) with the /64 subnet so the PC can generate its own IP via SLAAC.
-
-By default, a standard RA basically tells the PC: "Here is your subnet. Make your IP, and you are done."
-
-When you type ipv6 nd other-config-flag, you turn on the "O" flag in that beacon. The message changes to: "Here is your subnet. Make your IP, but you are not done yet. Go ask the DHCP server for other configuration details (like DNS)."
-
-Without removing the prefix, the router gets confused about its role. Without the "O" flag, the PCs generate their IPs but never realize they are supposed to go ask for the Google DNS server.
-
-remember to do not add the "prefix" command inside, and to make sure to set the flag 0 as 1 with the nd command. 
-
-3) DHCP stateful
+3. Run the command `show ipv6 dhcp binding` to show all the active binding. *Notes:* Because `R2` uses DHCPv6 stateless, it will not show up any active binding.
